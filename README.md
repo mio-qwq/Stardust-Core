@@ -14,10 +14,10 @@
 ```
 Stardust-Core/
 ├── Procyon/
-│   ├── src/
-│   ├── tb/
-│   └── constraints/
-├── docs/
+│   ├── src/          # Verilog 源码
+│   ├── tb/           # Testbench
+│   └── constraints/  # 时序约束
+├── docs/             # 设计文档
 └── README.md
 ```
 
