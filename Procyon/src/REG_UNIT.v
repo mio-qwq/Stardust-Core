@@ -4,10 +4,12 @@ module REG_UNIT(
     input RST,
     input [4:0]REG_NUM1,
     input [4:0]REG_NUM2,
-    input WE,
-    input [31:0]WRITE,
     output [31:0]READ1,
-    output [31:0]READ2
+    output [31:0]READ2,
+    //read ¡ü
+    input WE,
+    input [4:0]REG_WRITE,
+    input [31:0]WRITE
     );
     reg [31:0] REG_FILE [1:31];
     assign READ1 = (REG_NUM1==0)?0:REG_FILE[REG_NUM1];
@@ -20,8 +22,8 @@ module REG_UNIT(
             for (i = 1; i < 32; i = i + 1)
                 REG_FILE[i] <= 0;
         end
-        else if(WE)
-            REG_FILE[REG_NUM1]<=WRITE;
+        else if(WE && REG_WRITE != 0)
+            REG_FILE[REG_WRITE]<=WRITE;
 
     end
     
