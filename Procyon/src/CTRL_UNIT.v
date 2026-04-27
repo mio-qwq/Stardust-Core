@@ -46,8 +46,9 @@ module CTRL_UNIT(
     //异步读,同步写
     
     //R-type instructions
-    assign WHICH_REG1 = (INSTRUCTION[6:0]==7'b0110011)?INSTRUCTION[19:15]: 0;
-    assign WHICH_REG2 = (INSTRUCTION[6:0]==7'b0110011)? INSTRUCTION[24:20]: 0;
+    assign WHICH_REG1 =( (INSTRUCTION[6:0]==7'b0110011)||((INSTRUCTION[6:0]==7'b1100111)&&(INSTRUCTION[14:12]==3'b000))||(INSTRUCTION[6:0]==7'b1100011))
+    ?INSTRUCTION[19:15]: 0;
+    assign WHICH_REG2 = ((INSTRUCTION[6:0]==7'b0110011)||(INSTRUCTION[6:0]==7'b1100011))? INSTRUCTION[24:20]: 0;
     assign ALU_IF_SRA = (INSTRUCTION[30]==1)?1:0;
     assign ALU_IN2 = ((INSTRUCTION[6:0] == 7'b0110011) && (INSTRUCTION[30] == 0))
                      ?READ_REG2:
@@ -55,9 +56,42 @@ module CTRL_UNIT(
                      :0);
     assign ALU_IN1 = (INSTRUCTION[6:0]==7'b0110011)?READ_REG1:0;
     assign ALU_OPT_CODE = (INSTRUCTION[6:0]==7'b0110011)? INSTRUCTION[14:12]:0;
-    assign REG_WE = (INSTRUCTION[6:0]==7'b0110011)? 1: 0;
-    assign WHICH_REG_WRITE = (INSTRUCTION[6:0]==7'b0110011)? INSTRUCTION[11:7]:0;
-    assign WRITE_REG = (INSTRUCTION[6:0]==7'b0110011)? ALU_OUT:0;
+    assign REG_WE = ((INSTRUCTION[6:0]==7'b0110011)||(INSTRUCTION[6:0]==7'b1101111)||((INSTRUCTION[6:0]==7'b1100111)&&(INSTRUCTION[14:12]==3'b000)))? 1: 0;
+    assign WHICH_REG_WRITE = 
+    ((INSTRUCTION[6:0]==7'b0110011)||(INSTRUCTION[6:0]==7'b1101111)||((INSTRUCTION[6:0]==7'b1100111)&&(INSTRUCTION[14:12]==3'b000)))?
+     INSTRUCTION[11:7]:0;
+     
+    assign WRITE_REG = (INSTRUCTION[6:0]==7'b0110011)? ALU_OUT://ALU OPT
+                        ((INSTRUCTION[6:0]==7'b1101111)||((INSTRUCTION[6:0]==7'b1100111)&&(INSTRUCTION[14:12]==3'b000)))
+                        ?INSTRUCTION_POINTER+4//JAL
+                        :0;
     
+    wire [11:0]INSTRUCTION_POINTER_NEXT;
+    wire IF_BRANCH;
+    
+    assign IF_BRANCH = (INSTRUCTION[6:0]==7'b1100011)?
+                       ((INSTRUCTION[14:12]==3'b000)?(READ_REG1==READ_REG2?1:0)://BEQ
+                       (INSTRUCTION[14:12]==3'b001)?(READ_REG1!=READ_REG2?1:0)://BNE
+                       (INSTRUCTION[14:12]==3'b100)?($signed(READ_REG1)<$signed(READ_REG2)?1:0)://BLT
+                       (INSTRUCTION[14:12]==3'b101)?($signed(READ_REG1)>=$signed(READ_REG2)?1:0)://BGE
+                       (INSTRUCTION[14:12]==3'b110)?(READ_REG1<READ_REG2?1:0)://BLTU
+                       (INSTRUCTION[14:12]==3'b111)?(READ_REG1>=READ_REG2?1:0)://BGEU
+                       0):
+                       
+                       0;
+    
+    assign INSTRUCTION_POINTER_NEXT=(INSTRUCTION[6:0]==7'b1101111)?
+    INSTRUCTION_POINTER+{INSTRUCTION[31],INSTRUCTION[30:21],INSTRUCTION[20],INSTRUCTION[19:12],1'b0}://JAL
+    ((INSTRUCTION[6:0]==7'b1100111)&&(INSTRUCTION[14:12]==3'b000))?
+    (READ_REG1[11:0] + {{20{INSTRUCTION[31]}}, INSTRUCTION[31:20]}) & ~12'b1://JALR 
+    (IF_BRANCH==1)?0/*占位 还不知道怎么加*/:INSTRUCTION_POINTER+4;                             
+    
+    always @(posedge CLK or negedge RST)
+    begin
+        if(!RST)
+            INSTRUCTION_POINTER<=12'b0000_0000_0000;
+        else
+            INSTRUCTION_POINTER<=INSTRUCTION_POINTER_NEXT;
+    end    
     
 endmodule

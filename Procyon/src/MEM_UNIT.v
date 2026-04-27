@@ -6,15 +6,19 @@ module MEM_UNIT(
 	input CLK,
 	output  [31:0] READ,
 	input [11:0] ADDR_OF_INSTRUCTION,
-	output  [31:0] READ_INSTRUCTION
-	
+	output  [31:0] READ_INSTRUCTION,
+	output [31:0]MM_IO1,
+	output [31:0]MM_IO2
 );	
-	reg [31:0] MEM [0:4095];
-	assign READ_INSTRUCTION = MEM [ADDR_OF_INSTRUCTION];
-    assign READ = MEM [ADDR];
+
+	reg [31:0] MEM [0:1023];
+	assign MM_IO2 = MEM [1022];
+	assign MM_IO1 = MEM [1023];
+	assign READ_INSTRUCTION = MEM [ADDR_OF_INSTRUCTION[11:2]];
+    assign READ = MEM [ADDR[11:2]];
 	always @(posedge CLK)
 	begin
         if(WRITE_ENABLE)
-			MEM [ADDR] <= WRITE;
+			MEM [ADDR[11:2]] <= WRITE;
 	end
 endmodule
