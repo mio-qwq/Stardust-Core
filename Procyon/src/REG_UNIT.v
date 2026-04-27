@@ -6,7 +6,7 @@ module REG_UNIT(
     input [4:0]REG_NUM2,
     output [31:0]READ1,
     output [31:0]READ2,
-    //read ¡ü
+    //read â†‘
     input WE,
     input [4:0]REG_WRITE,
     input [31:0]WRITE

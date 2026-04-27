@@ -1,14 +1,14 @@
 module ALU_UNIT(
     input [31:0]IN1,
     input [31:0]IN2,
-    input IF_SRA,//SRA ËãÊýÓÒÒÆ $signed()>>>
-    input [2:0]OPT_CODE,//ÆäÊµ¾ÍÊÇRISC VµÄfunct3
+    input IF_SRA,//SRA ç®—æ•°å³ç§» $signed()>>>
+    input [2:0]OPT_CODE,//å…¶å®žå°±æ˜¯RISC Vçš„funct3
     output [31:0]OUT
     );
     assign OUT=(OPT_CODE==3'B000)?IN1+IN2://ADD / SUB
-               (OPT_CODE==3'B001)?IN1<<IN2[4:0]://SLL ×óÒÆ
-               (OPT_CODE==3'B010)?($signed(IN1)<$signed(IN2)?1:0)://SLT ÓÐ·ûºÅÐ¡ÓÚÖÃÎ»
-               (OPT_CODE==3'B011)?(IN1<IN2?1:0): //SLTU ÎÞ·ûºÅÐ¡ÓÚÖÃÎ»
+               (OPT_CODE==3'B001)?IN1<<IN2[4:0]://SLL å·¦ç§»
+               (OPT_CODE==3'B010)?($signed(IN1)<$signed(IN2)?1:0)://SLT æœ‰ç¬¦å·å°äºŽç½®ä½
+               (OPT_CODE==3'B011)?(IN1<IN2?1:0): //SLTU æ— ç¬¦å·å°äºŽç½®ä½
                (OPT_CODE==3'B100)?IN1 ^ IN2://XOR
                (OPT_CODE==3'B101)?(IF_SRA?($signed(IN1) >>> IN2[4:0]):(IN1 >> IN2[4:0])):
                (OPT_CODE==3'B110)?IN1|IN2:

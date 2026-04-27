@@ -1,6 +1,6 @@
 /*
-�ƻ���дһ��������CPU
-���ｫ���ǿ��Ƶ�Ԫ
+计划编写一个单周期CPU
+这里将会是控制单元
 */
 module CTRL_UNIT(
     input CLK,
@@ -11,22 +11,22 @@ module CTRL_UNIT(
     output [11:0]INSTRUCTION_ADDR,
     //
     
-    output [11:0]WHICH_RAM,//12λ��ַ�ռ�
+    output [11:0]WHICH_RAM,//12位地址空间
     input [31:0]READ_RAM,
     output [31:0]WRITE_RAM,
     output RAM_WE,
     
-    //��ʵ���Ƶ�Ԫ����Ҫ���ǿ�����ô��д�ڴ�ͼĴ�����
-    //���ڴ��д   ���Ĵ�����д
+    //其实控制单元最主要就是控制怎么读写内存和寄存器了
+    //↑内存读写   ↓寄存器读写
     output [4:0]WHICH_REG1,
     input [31:0]READ_REG1,
     output [4:0]WHICH_REG2,
-    input [31:0]READ_REG2, //�ƻ�ר����һ���Ĵ�����Ԫ,��������мĴ���
+    input [31:0]READ_REG2, //计划专门做一个寄存器单元,里面放所有寄存器
     
     
     output [4:0]WHICH_REG_WRITE,
     output [31:0]WRITE_REG,
-    output REG_WE      //�Ĵ���дʹ��
+    output REG_WE      //寄存器写使能
     );
     wire [31:0]ALU_IN1,ALU_IN2,ALU_OUT;
     wire [2:0]ALU_OPT_CODE;
@@ -38,12 +38,12 @@ module CTRL_UNIT(
         .OPT_CODE(ALU_OPT_CODE),
         .OUT(ALU_OUT)
     );
-    //��������������Ҫ��instruction pointer 
-    //��ŵ������������е�
+    //最最最最最最重要的instruction pointer 
+    //冯诺依曼计算机必有的
     reg [11:0]INSTRUCTION_POINTER;
     assign INSTRUCTION_ADDR=INSTRUCTION_POINTER;
-    //�����ڴ����� ����ֻ�Ǵ�����֮������һ������߼�
-    //�첽��,ͬ��д
+    //单周期处理器 仅仅只是储存器之间连了一堆组合逻辑
+    //异步读,同步写
     
     //R-type instructions
     assign WHICH_REG1 =( (INSTRUCTION[6:0]==7'b0110011)||((INSTRUCTION[6:0]==7'b1100111)&&(INSTRUCTION[14:12]==3'b000))||(INSTRUCTION[6:0]==7'b1100011))
@@ -84,7 +84,7 @@ module CTRL_UNIT(
     INSTRUCTION_POINTER+{INSTRUCTION[31],INSTRUCTION[30:21],INSTRUCTION[20],INSTRUCTION[19:12],1'b0}://JAL
     ((INSTRUCTION[6:0]==7'b1100111)&&(INSTRUCTION[14:12]==3'b000))?
     (READ_REG1[11:0] + {{20{INSTRUCTION[31]}}, INSTRUCTION[31:20]}) & ~12'b1://JALR 
-    (IF_BRANCH==1)?0/*ռλ ����֪����ô��*/:INSTRUCTION_POINTER+4;                             
+    (IF_BRANCH==1)?0/*占位 还不知道怎么加*/:INSTRUCTION_POINTER+4;                             
     
     always @(posedge CLK or negedge RST)
     begin
